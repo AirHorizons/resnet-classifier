@@ -2,6 +2,11 @@ import os
 import click
 import logging
 
+from PIL import Image, ImageFile
+Image.MAX_IMAGE_PIXELS = None
+ImageFile.LOAD_TRUNCATED_IMAGES = True
+
+import tensorflow as tf
 import keras
 import numpy as np
 import keras.backend as K
@@ -56,16 +61,16 @@ def train(learning_rate, batch_size, num_epochs, save_every, tensorboard_vis, pr
     datagen = keras.preprocessing.image.ImageDataGenerator(rescale=1./255)
 
     get_gen = lambda x: datagen.flow_from_directory(
-        'datasets/caltech_101/{}'.format(x),
-        target_size=(64, 64),
+        'D:/data/face/{}'.format(x),
+        target_size=(128, 128),
         batch_size=batch_size,
         class_mode='categorical'
     )
 
     # generator objects
-    train_generator = get_gen('train')
-    val_generator = get_gen('val')
-    test_generator = get_gen('test')
+    train_generator = get_gen('Training')
+    val_generator = get_gen('Validation')
+    test_generator = get_gen('Testing')
 
     if os.path.exists('models/resnet50.h5'):
         # load model
@@ -74,9 +79,9 @@ def train(learning_rate, batch_size, num_epochs, save_every, tensorboard_vis, pr
     else:
         # create model
         logging.info('creating model')
-        resnet50 = create_model(input_shape=(64, 64, 3), classes=101)
+        resnet50 = create_model(input_shape=(128, 128, 3), classes=7)
     
-    optimizer = keras.optimizers.Adam(learning_rate)
+    optimizer = tf.keras.optimizers.Adam(learning_rate)
     resnet50.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=['accuracy'])
     
     if print_summary:
